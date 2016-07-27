@@ -38,17 +38,51 @@
     </style>
     <script src="http://api.map.so.com/js?key=db185c6da2adf4ad2913"></script>
     <script>
-        var map;
         function initialize() {
             var mapOptions = {
-                zoom: 14,
-                center: new so.maps.LatLng(39.975065,116.490241),
+                zoom: 11,
+                disableDefaultUI: true,
                 mapTypeId: so.maps.MapTypeId.ROADMAP
             };
-            map = new so.maps.Map(document.getElementById('map-canvas'), mapOptions);
-        }
+            var map = new so.maps.Map(document.getElementById('map-canvas'), mapOptions);
+            var info = new so.maps.InfoWindow({map:map});
+            var placeSearch = new so.maps.PlaceSearch();
+            var searchOptions = {
+                q:"银行",
+                region:"北京",
+            }
+            placeSearch.search(searchOptions,function(data){
+                if(data.status=="10000"){
+                    for(var i=0; i<data.result.length;i++){
+                        var poi = data.result[i];
+                        var pt = new so.maps.LatLng(poi.location.lat, poi.location.lng);
+                        var marker = new so.maps.Marker({map:map,position:pt});
+                        bindMarkerClick(marker, poi, info);
+                        if(i==0){
+                            map.panTo(pt);
+                        }
+                    }
+                }else{
+                    console.log("查询错误信息："+ data.message);
+                }
+            });
 
-        so.maps.event.addDomListener(window, 'load', initialize);
+            //绑定marker的click事件
+            function bindMarkerClick(marker, poi, info){
+                marker.on('click', function(){
+                    var option = {
+                        content: poi.name+"<br/>"+poi.address,
+                        maxWidth:300,
+                        map:map,
+                        zIndex: 10,
+                        position:marker
+                    };
+
+                    info.setOptions(option);
+                    info.open();
+                });
+            }
+        }
     </script>
 
 </head>
